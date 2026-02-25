@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Builders — Airbnb Clone</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{background:#f6f1ff;transition:0.3s;}
+.dark{background:#121212;color:white;}
+
+nav{
+  position:fixed;top:0;width:100%;
+  display:flex;justify-content:space-between;
+  align-items:center;padding:15px 30px;
+  background:rgba(255,255,255,0.8);
+  backdrop-filter:blur(10px);
+  box-shadow:0 2px 15px rgba(0,0,0,0.1);
+  z-index:1000;
+}
+.logo{font-size:22px;font-weight:600;color:#ff385c;}
+.nav-icons span{margin-left:20px;cursor:pointer;font-size:20px;}
+
+.container{margin-top:90px;padding:20px;}
+.cards{display:flex;flex-wrap:wrap;justify-content:center;}
+
+.card{
+  width:260px;margin:15px;border-radius:20px;
+  overflow:hidden;transition:0.3s;
+  background:rgba(255,255,255,0.5);
+  backdrop-filter:blur(15px);
+  box-shadow:0 8px 30px rgba(0,0,0,0.1);
+}
+.dark .card{background:#1e1e1e;}
+.card:hover{transform:scale(1.05);}
+.card img{width:100%;height:180px;object-fit:cover;cursor:pointer;}
+.card-body{padding:12px;}
+.heart{float:right;cursor:pointer;font-size:20px;transition:0.3s;}
+.heart.active{color:red;transform:scale(1.2);}
+
+button{
+  padding:8px 15px;border:none;border-radius:20px;
+  background:linear-gradient(45deg,#ff385c,#ff7e5f);
+  color:white;cursor:pointer;margin-top:5px;
+  transition:0.3s;
+}
+button:hover{transform:scale(1.05);}
+
+input{
+  padding:8px;margin:5px 0;border-radius:10px;border:1px solid #ccc;
+  width:100%;
+}
+
+.section{display:none;}
+.active-section{display:block;}
+
+.modal{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  display:none;justify-content:center;align-items:center;
+  background:rgba(0,0,0,0.5);
+}
+.modal-content{
+  background:white;padding:20px;border-radius:15px;width:300px;position:relative;
+}
+.close-btn{
+  position:absolute;top:8px;right:12px;cursor:pointer;font-weight:bold;
+}
+
+.toast{
+  position:fixed;bottom:70px;right:20px;
+  background:black;color:white;padding:10px 20px;
+  border-radius:10px;display:none;
+}
+
+.details-box{
+  background:white;padding:15px;border-radius:15px;
+  margin:20px auto;width:80%;box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.bottom-nav{
+  position:fixed;bottom:0;width:100%;
+  display:flex;justify-content:space-around;
+  background:white;padding:10px 0;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+}
+.bottom-nav div{text-align:center;cursor:pointer;font-size:18px;}
+</style>
+</head>
+<body>
+
+<nav>
+<div class="logo">🏠 Code Builders</div>
+<div class="nav-icons">
+<span onclick="toggleDark()">🌙</span>
+<span onclick="openLogin()">👤</span>
+<span onclick="openAdminLogin()">🛠️</span>
+</div>
+</nav>
+
+<div class="container">
+
+<!-- HOME -->
+<div id="homeSection" class="section active-section">
+<h2>Explore Places</h2>
+<input type="text" id="search" placeholder="Search places..." oninput="renderPlaces()">
+<div id="detailsContainer"></div>
+<div class="cards" id="places"></div>
+</div>
+
+<!-- WISHLIST -->
+<div id="wishlistSection" class="section">
+<h2>Your Wishlist</h2>
+<div class="cards" id="wishlistContainer"></div>
+</div>
+
+<!-- BOOKING -->
+<div id="bookingSection" class="section">
+<h2>Booking</h2>
+<div id="bookingDetails"></div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminSection" class="section">
+<h2>Admin Dashboard</h2>
+
+<h3>Add Property</h3>
+<input id="adminName" placeholder="Property Name">
+<input id="adminPrice" type="number" placeholder="Price per night">
+<input id="adminImage" placeholder="Image URL (Direct link)">
+<button onclick="addProperty()">Add Property</button>
+
+<h3>All Bookings</h3>
+<div id="adminBookings"></div>
+
+<button onclick="adminLogout()">Logout</button>
+</div>
+
+</div>
+
+<!-- USER LOGIN -->
+<div class="modal" id="loginModal">
+<div class="modal-content">
+<span class="close-btn" onclick="closeLogin()">❌</span>
+<h3>User Login</h3>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="modal" id="adminModal">
+<div class="modal-content">
+<span class="close-btn" onclick="closeAdminLogin()">❌</span>
+<h3>Admin Login</h3>
+<input id="adminUser" placeholder="Admin Username">
+<input id="adminPass" type="password" placeholder="Password">
+<button onclick="adminLogin()">Login</button>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<audio id="confirmSound">
+<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b1b5b.mp3?filename=correct-2-46134.mp3">
+</audio>
+
+<div class="bottom-nav">
+<div onclick="showSection('homeSection')">🏠<br><small>Home</small></div>
+<div onclick="showSection('wishlistSection')">❤️<br><small>Wishlist</small></div>
+<div onclick="showSection('bookingSection')">📖<br><small>Booking</small></div>
+</div>
+
+<script>
+// Realistic Places with Images
+let places = [
+  {id:1,name:"Santorini Caldera Villa, Greece",price:3200,img:"https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=800&q=60",description:"A stunning luxury villa overlooking the Santorini Caldera with breathtaking sea views.",events:"Sunset cruises, local wine tastings"},
+  {id:2,name:"Swiss Alps Mountain Chalet, Switzerland",price:3500,img:"https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=60",description:"A cozy mountain chalet nestled in snow-capped peaks perfect for skiing.",events:"Skiing events, alpine festivals"},
+  {id:3,name:"Paris Eiffel Tower Penthouse, France",price:2900,img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=60",description:"Elegant penthouse with Eiffel Tower views and modern luxury interiors.",events:"City tours, culinary experiences"},
+  {id:4,name:"Bali Beachfront Bungalow, Indonesia",price:2200,img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60",description:"Relax in a tropical bungalow on pristine sandy beaches.",events:"Surf classes, beach parties"},
+  {id:5,name:"Tokyo Skyline Apartment, Japan",price:2600,img:"https://images.unsplash.com/photo-1549692520-acc6669e2f0c?auto=format&fit=crop&w=800&q=60",description:"Modern city apartment close to vibrant Tokyo streets.",events:"Nightlife tours, food walks"},
+  {id:6,name:"Cape Town Seaview House, South Africa",price:2100,img:"https://images.unsplash.com/photo-1576671086602-08a1cbbd2d69?auto=format&fit=crop&w=800&q=60",description:"Oceanfront home with spectacular Table Mountain views.",events:"Wineland tours, boat trips"},
+  {id:7,name:"Bariloche Lake Cabin, Argentina",price:2000,img:"https://images.unsplash.com/photo-1582719478144-85f978b8430a?auto=format&fit=crop&w=800&q=60",description:"Rustic lake cabin surrounded by forests and scenic views.",events:"Hiking trails, fishing excursions"},
+  {id:8,name:"Marrakech Riad Retreat, Morocco",price:2300,img:"https://images.unsplash.com/photo-1587502536263-1b062d31e5da?auto=format&fit=crop&w=800&q=60",description:"Traditional Moroccan riad with romantic courtyard.",events:"Market tours, desert adventures"},
+  {id:9,name:"Tulum Jungle Villa, Mexico",price:2900,img:"https://images.unsplash.com/photo-1543986693-6762d47a80ee?auto=format&fit=crop&w=800&q=60",description:"Secluded villa hidden in jungle near Tulum beaches.",events:"Cenote tours, snorkeling trips"},
+  {id:10,name:"Reykjavik Northern Lights Cabin, Iceland",price:2700,img:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=60",description:"Glass cabin perfect for watching Northern Lights.",events:"Aurora tours, hot springs"},
+  {id:11,name:"Rio Copacabana Beach Apt, Brazil",price:2200,img:"https://images.unsplash.com/photo-1576671086602-08a1cbbd2d69?auto=format&fit=crop&w=800&q=60",description:"Stylish beachfront apartment in Rio.",events:"Samba nights, beach sports"},
+  {id:12,name:"Sydney Harbour Loft, Australia",price:3100,img:"https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=60",description:"Loft apartment with Sydney Opera House views.",events:"Harbour cruises, theater nights"},
+  {id:13,name:"Kyoto Traditional House, Japan",price:2400,img:"https://images.unsplash.com/photo-1616793270918-8d81577168e3?auto=format&fit=crop&w=800&q=60",description:"Authentic Japanese house near serene temples.",events:"Tea ceremonies, temple tours"},
+  {id:14,name:"Amalfi Coast Villa, Italy",price:3800,img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60",description:"Cliffside villa overlooking the Amalfi Coast.",events:"Boat tours, wine tastings"},
+  {id:15,name:"Big Sky Mountain Lodge, USA",price:2400,img:"https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=60",description:"Mountain lodge ideal for outdoor adventures.",events:"Ski races, hiking"}
+];
+
+let wishlist=[]; 
+let bookings=[]; 
+let currentBooking=null;
+
+// RENDERING & FUNCTIONS
+function renderPlaces(){
+  let container=document.getElementById("places");
+  container.innerHTML="";
+  places.forEach(p=>{
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${p.img}" onclick="showDetails(${p.id})">
+        <div class="card-body">
+          <b>${p.name}</b>
+          <span class="heart ${wishlist.includes(p.id)?'active':''}" onclick="toggleWishlist(${p.id})">❤</span>
+          <p>₹${p.price}/night</p>
+          <button onclick="startBooking(${p.id})">Book</button>
+        </div>
+      </div>`;
+  });
+}
+
+function showDetails(id){
+  let p=places.find(x=>x.id===id);
+  document.getElementById("detailsContainer").innerHTML=`
+    <div class="details-box">
+      <h3>${p.name}</h3>
+      <p>${p.description}</p>
+      <p><b>Special Events:</b> ${p.events}</p>
+    </div>`;
+}
+
+function toggleWishlist(id){
+  if(wishlist.includes(id)) wishlist=wishlist.filter(x=>x!==id);
+  else wishlist.push(id);
+  renderPlaces();
+  renderWishlist();
+}
+
+function renderWishlist(){
+  let container=document.getElementById("wishlistContainer");
+  container.innerHTML="";
+  wishlist.forEach(id=>{
+    let p=places.find(x=>x.id===id);
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${p.img}">
+        <div class="card-body">
+          <b>${p.name}</b>
+          <p>₹${p.price}</p>
+          <button onclick="toggleWishlist(${p.id})">Remove</button>
+        </div>
+      </div>`;
+  });
+}
+
+function startBooking(id){
+  currentBooking=places.find(x=>x.id===id);
+  showSection("bookingSection");
+  renderBooking();
+}
+
+function renderBooking(){
+  if(!currentBooking) return;
+  document.getElementById("bookingDetails").innerHTML=`
+    <h3>${currentBooking.name}</h3>
+    <p>₹${currentBooking.price}/night</p>
+    <input type="date" id="checkin">
+    <input type="date" id="checkout">
+    <button onclick="calculateTotal()">Calculate</button>
+    <p id="totalAmount"></p>
+    <button onclick="confirmBooking()">Confirm Booking</button>
+  `;
+}
+
+function calculateTotal(){
+  let inD=new Date(document.getElementById("checkin").value);
+  let outD=new Date(document.getElementById("checkout").value);
+  let days=(outD-inD)/(1000*60*60*24);
+  if(days>0){
+    let total=days*currentBooking.price;
+    document.getElementById("totalAmount").innerText="Total: ₹"+total;
+    currentBooking.total=total;
+  } else document.getElementById("totalAmount").innerText="Invalid Dates";
+}
+
+function confirmBooking(){
+  if(!currentBooking.total){alert("Calculate total first"); return;}
+  bookings.push(currentBooking);
+  document.getElementById("confirmSound").play();
+  showToast("Booking Confirmed!");
+}
+
+function openLogin(){document.getElementById("loginModal").style.display="flex";}
+function closeLogin(){document.getElementById("loginModal").style.display="none";}
+function login(){closeLogin();showToast("Logged in Successfully!");}
+
+function openAdminLogin(){document.getElementById("adminModal").style.display="flex";}
+function closeAdminLogin(){document.getElementById("adminModal").style.display="none";}
+function adminLogin(){
+  let u=document.getElementById("adminUser").value.trim();
+  let p=document.getElementById("adminPass").value.trim();
+  if(u==="jeru" && p==="12345678"){
+    closeAdminLogin();
+    showSection("adminSection");
+    showToast("Admin Logged In");
+  } else showToast("Wrong Credentials");
+}
+
+function adminLogout(){showSection("homeSection");}
+
+function addProperty(){
+  let n=document.getElementById("adminName").value;
+  let pr=document.getElementById("adminPrice").value;
+  let im=document.getElementById("adminImage").value;
+  places.push({id:Date.now(),name:n,price:pr,img:im,description:"New property added by admin",events:"No special events yet"});
+  renderPlaces();
+  showToast("Property Added");
+}
+
+function toggleDark(){document.body.classList.toggle("dark");}
+
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active-section"));
+  document.getElementById(id).classList.add("active-section");
+}
+
+function showToast(msg){
+  let t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2000);
+}
+
+renderPlaces();
+
+</script>
+</body>
+</html>
